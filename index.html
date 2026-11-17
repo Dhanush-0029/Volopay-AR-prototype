@@ -1,492 +1,197 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Volopay AR — Automated Invoicing & Xero Auto-Match Prototype</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <style>
-        body { font-family: 'Inter', sans-serif; }
-        @keyframes pulse-ring {
-            0% { transform: scale(0.95); opacity: 0.7; }
-            70% { transform: scale(1.08); opacity: 0; }
-            100% { transform: scale(0.95); opacity: 0; }
-        }
-        .animate-pulse-ring {
-            animation: pulse-ring 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-        }
-        .fade-in {
-            animation: fadeIn 0.35s ease-out forwards;
-        }
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(6px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Volopay AR — Interactive Prototype (Malaysia × YYC Partner Edition)</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Inter', sans-serif; }
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .animate-slide { animation: slideIn 0.25s ease-out forwards; }
+  </style>
 </head>
 <body class="bg-slate-50 text-slate-900 min-h-screen flex flex-col">
-
-    <!-- Top Partner Context Banner -->
-    <div class="bg-indigo-950 text-white px-4 py-2.5 text-xs sm:text-sm border-b border-indigo-800">
-        <div class="max-w-6xl mx-auto flex flex-wrap items-center justify-between gap-2">
-            <div class="flex items-center gap-2">
-                <span class="bg-indigo-600 text-white font-bold px-2 py-0.5 rounded text-xs uppercase tracking-wider">Interactive Demo</span>
-                <span class="text-indigo-100">Built for <strong>YYC Global Business Solutions</strong> • Malaysia SME Xero + LHDN AR Flow</span>
-            </div>
-            <button onclick="resetDemo()" class="text-indigo-300 hover:text-white underline text-xs font-medium transition">
-                ↺ Reset Demo Flow
-            </button>
+  <header class="bg-slate-950 text-white border-b border-slate-800 sticky top-0 z-40">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="w-9 h-9 rounded-lg bg-indigo-600 flex items-center justify-center font-extrabold text-lg text-white">V</div>
+        <div>
+          <div class="flex items-center gap-2">
+            <span class="font-bold text-base text-white">Volopay <span class="text-indigo-400">AR</span></span>
+            <span class="text-[10px] font-semibold uppercase px-2 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">Malaysia • LHDN Ready</span>
+          </div>
+          <p class="text-[11px] text-slate-400">Prepared for YYC Global Business Solutions (Janet PJ Lim)</p>
         </div>
+      </div>
+      <div class="flex items-center bg-slate-900 p-1 rounded-xl border border-slate-800">
+        <button onclick="switchTab('seller')" id="tab-seller" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-indigo-600 text-white transition">1. SME Dashboard</button>
+        <button onclick="switchTab('buyer')" id="tab-buyer" class="px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-300 hover:text-white transition">2. Customer Pay Link</button>
+        <button onclick="switchTab('xero')" id="tab-xero" class="px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-300 hover:text-white transition">3. Xero Sync</button>
+      </div>
     </div>
+  </header>
 
-    <!-- Main App Header -->
-    <header class="bg-white border-b border-slate-200 sticky top-0 z-20">
-        <div class="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
-            <div class="flex items-center gap-3">
-                <div class="w-9 h-9 rounded-lg bg-indigo-600 flex items-center justify-center text-white font-extrabold text-lg shadow-sm">
-                    V
-                </div>
-                <div>
-                    <div class="flex items-center gap-2">
-                        <span class="font-bold text-slate-900 text-lg tracking-tight">Volopay</span>
-                        <span class="text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200 px-2 py-0.5 rounded-full">AR Cloud</span>
-                    </div>
-                    <p class="text-[11px] text-slate-500 hidden sm:block">Client Workspace: Klang Valley Manufacturing Sdn Bhd</p>
-                </div>
-            </div>
-
-            <!-- Interactive Step Indicator -->
-            <div class="flex items-center gap-1 sm:gap-3 text-xs font-semibold">
-                <div id="step-badge-1" class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200">
-                    <span class="w-4 h-4 rounded-full bg-indigo-600 text-white flex items-center justify-center text-[10px]">1</span>
-                    <span class="hidden md:inline">Send Invoice</span>
-                </div>
-                <span class="text-slate-300">→</span>
-                <div id="step-badge-2" class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-full bg-slate-100 text-slate-500 border border-slate-200">
-                    <span class="w-4 h-4 rounded-full bg-slate-400 text-white flex items-center justify-center text-[10px]">2</span>
-                    <span class="hidden md:inline">Buyer Pays</span>
-                </div>
-                <span class="text-slate-300">→</span>
-                <div id="step-badge-3" class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-full bg-slate-100 text-slate-500 border border-slate-200">
-                    <span class="w-4 h-4 rounded-full bg-slate-400 text-white flex items-center justify-center text-[10px]">3</span>
-                    <span class="hidden md:inline">Auto-Match & Xero</span>
-                </div>
-            </div>
+  <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
+    <!-- VIEW 1: SELLER DASHBOARD -->
+    <section id="view-seller" class="space-y-6">
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+          <div class="text-xs font-medium text-slate-500">Total Receivables (30d)</div>
+          <div class="text-2xl font-extrabold text-slate-900 mt-2">RM 148,500.00</div>
         </div>
-    </header>
+        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+          <div class="text-xs font-medium text-slate-500">Paid & Auto-Matched</div>
+          <div id="kpi-paid" class="text-2xl font-extrabold text-emerald-600 mt-2">RM 84,200.00</div>
+        </div>
+        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+          <div class="text-xs font-medium text-slate-500">Avg. Days Sales Outstanding</div>
+          <div class="text-2xl font-extrabold text-slate-900 mt-2">11.4 Days <span class="text-xs text-emerald-600 font-normal">(-29d)</span></div>
+        </div>
+      </div>
 
-    <!-- Main Dashboard Container -->
-    <main class="max-w-6xl mx-auto w-full px-4 sm:px-6 py-6 flex-1 space-y-6">
+      <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
+        <div>
+          <h1 class="text-base font-bold text-slate-900">Accounts Receivable & E-Invoice Ledger</h1>
+          <p class="text-xs text-slate-500">Klang Valley Precision Packaging Sdn Bhd • Connected to Xero</p>
+        </div>
+        <button onclick="openBuyerPortal('INV-2026-083')" class="px-4 py-2.5 rounded-xl bg-indigo-600 text-white text-xs font-semibold shadow hover:bg-indigo-700 transition">
+          Test Buyer Payment Link →
+        </button>
+      </div>
 
-        <!-- Guided Walkthrough Prompt Box -->
-        <div id="guide-banner" class="bg-white border-l-4 border-indigo-600 rounded-r-xl shadow-sm p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+        <table class="w-full text-left border-collapse">
+          <thead>
+            <tr class="bg-slate-50 border-b border-slate-200 text-[11px] font-bold uppercase text-slate-500">
+              <th class="py-3 px-5">Invoice #</th>
+              <th class="py-3 px-4">Customer</th>
+              <th class="py-3 px-4">Amount</th>
+              <th class="py-3 px-4">Status</th>
+              <th class="py-3 px-5 text-right">Action</th>
+            </tr>
+          </thead>
+          <tbody id="invoice-table" class="divide-y divide-slate-100 text-xs"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- VIEW 2: BUYER PORTAL -->
+    <section id="view-buyer" class="hidden max-w-xl mx-auto">
+      <div class="bg-white rounded-3xl border border-slate-200 shadow-xl overflow-hidden">
+        <div class="bg-slate-900 text-white px-6 py-4 flex justify-between items-center">
+          <div>
+            <span class="text-[10px] uppercase text-indigo-400 font-bold">Volopay Instant Checkout</span>
+            <h3 class="font-bold text-sm">Johor Hardware & Supply Sdn Bhd</h3>
+          </div>
+          <span class="font-mono text-xs bg-slate-800 px-2 py-1 rounded">INV-2026-083</span>
+        </div>
+        <div class="p-6 space-y-5">
+          <div class="flex justify-between items-center pb-4 border-b border-slate-100">
             <div>
-                <div class="text-xs font-bold uppercase tracking-wider text-indigo-600 mb-0.5" id="guide-step-title">Step 1 of 3 — Issue Smart Invoice</div>
-                <p class="text-sm text-slate-700" id="guide-step-desc">
-                    Click <strong>"+ Create & Send Invoice"</strong> (or click <strong>"Simulate Buyer Pay"</strong> on any sent invoice) to see how Volopay embeds DuitNow/FPX links and eliminates manual chasing.
-                </p>
+              <p class="text-xs text-slate-500">Amount Due (LHDN Validated)</p>
+              <p class="text-2xl font-extrabold text-slate-900">RM 18,500.00</p>
             </div>
-            <button onclick="openCreateModal()" class="shrink-0 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-sm px-4 py-2.5 rounded-lg shadow-sm transition flex items-center justify-center gap-2">
-                <span>+ Create & Send Invoice</span>
-            </button>
+          </div>
+          <div>
+            <label class="block text-xs font-bold uppercase text-slate-500 mb-2">Select Malaysian Payment Rail</label>
+            <div class="grid grid-cols-2 gap-3 text-xs font-semibold">
+              <div onclick="selectRail(this)" class="rail-btn p-3 rounded-xl border-2 border-indigo-600 bg-indigo-50 cursor-pointer">DuitNow Instant QR</div>
+              <div onclick="selectRail(this)" class="rail-btn p-3 rounded-xl border border-slate-200 cursor-pointer">FPX Corporate Banking</div>
+            </div>
+          </div>
+          <button onclick="payInvoice()" id="pay-btn" class="w-full py-3.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow transition">
+            Pay RM 18,500.00 Now (Simulate Auto-Match)
+          </button>
+          <div id="success-banner" class="hidden p-4 rounded-xl bg-emerald-50 border border-emerald-200 text-xs text-emerald-800 text-center font-medium">
+            ✓ Payment matched instantly via webhook & pushed to Xero! <br>
+            <button onclick="switchTab('xero')" class="mt-2 text-indigo-600 font-bold underline">Inspect Xero Ledger →</button>
+          </div>
         </div>
+      </div>
+    </section>
 
-        <!-- KPI Metrics Row -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
-                <div class="text-xs font-medium text-slate-500">Outstanding Receivables</div>
-                <div class="text-2xl font-bold text-slate-900 mt-1" id="kpi-outstanding">RM 18,450.00</div>
-                <div class="text-xs text-amber-600 font-medium mt-1" id="kpi-outstanding-sub">1 invoice awaiting payment</div>
-            </div>
-            <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
-                <div class="text-xs font-medium text-slate-500">Collected & Auto-Matched</div>
-                <div class="text-2xl font-bold text-emerald-600 mt-1" id="kpi-collected">RM 42,800.00</div>
-                <div class="text-xs text-emerald-700 font-medium mt-1">100% matched to Xero</div>
-            </div>
-            <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
-                <div class="text-xs font-medium text-slate-500">Avg. Collection Speed</div>
-                <div class="text-2xl font-bold text-slate-900 mt-1">1.4 Days</div>
-                <div class="text-xs text-indigo-600 font-medium mt-1">Down from 38 days manual</div>
-            </div>
-            <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
-                <div class="text-xs font-medium text-slate-500">YYC Bookkeeper Time Saved</div>
-                <div class="text-2xl font-bold text-slate-900 mt-1" id="kpi-hours">14.5 hrs/mo</div>
-                <div class="text-xs text-slate-500 mt-1">Zero manual bank matching</div>
-            </div>
+    <!-- VIEW 3: XERO SYNC -->
+    <section id="view-xero" class="hidden space-y-4">
+      <div class="bg-sky-950 text-white p-6 rounded-2xl">
+        <h3 class="font-bold text-base">Xero Two-Way Auto-Reconciliation Feed</h3>
+        <p class="text-xs text-sky-200 mt-1">Zero manual bank statement matching for YYC bookkeepers.</p>
+      </div>
+      <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 text-xs space-y-3">
+        <div class="flex justify-between py-2 border-b border-slate-100 font-bold text-slate-700">
+          <span>Invoice # & Customer</span>
+          <span>Payment Reference</span>
+          <span>Status</span>
         </div>
+        <div id="xero-list" class="space-y-2"></div>
+      </div>
+    </section>
+  </main>
 
-        <!-- Invoices & Live Matching Table -->
-        <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-            <div class="px-5 py-4 border-b border-slate-200 flex flex-wrap items-center justify-between gap-2">
-                <div>
-                    <h2 class="font-bold text-slate-900 text-base">Accounts Receivable Ledger</h2>
-                    <p class="text-xs text-slate-500">LHDN MyInvois validated • Real-time two-way Xero sync active</p>
-                </div>
-                <div class="flex items-center gap-2 text-xs">
-                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-emerald-50 text-emerald-700 font-medium border border-emerald-200">
-                        <span class="w-2 h-2 rounded-full bg-emerald-500"></span> Xero Connected
-                    </span>
-                </div>
-            </div>
+  <script>
+    let invoices = [
+      { id: "INV-2026-081", cust: "Selangor Logistics Bhd", amt: 52000, paid: true, ref: "DN882910" },
+      { id: "INV-2026-082", cust: "Penang Foods Mfg Sdn Bhd", amt: 32200, paid: true, ref: "FPX441092" },
+      { id: "INV-2026-083", cust: "Johor Hardware & Supply Sdn Bhd", amt: 18500, paid: false, ref: "" }
+    ];
 
-            <div class="overflow-x-auto">
-                <table class="w-full text-left border-collapse">
-                    <thead>
-                        <tr class="bg-slate-50 border-b border-slate-200 text-[11px] font-bold uppercase tracking-wider text-slate-500">
-                            <th class="py-3 px-5">Invoice # / LHDN ID</th>
-                            <th class="py-3 px-4">Customer</th>
-                            <th class="py-3 px-4">Amount (MYR)</th>
-                            <th class="py-3 px-4">Status</th>
-                            <th class="py-3 px-4">Xero Sync</th>
-                            <th class="py-3 px-5 text-right">Interactive Action</th>
-                        </tr>
-                    </thead>
-                    <tbody id="invoice-table-body" class="divide-y divide-slate-100 text-sm">
-                        <!-- Populated by JS -->
-                    </tbody>
-                </table>
-            </div>
-        </div>
+    function render() {
+      const tbody = document.getElementById("invoice-table");
+      tbody.innerHTML = "";
+      invoices.forEach(inv => {
+        tbody.innerHTML += `
+          <tr class="hover:bg-slate-50">
+            <td class="py-3 px-5 font-bold">${inv.id}</td>
+            <td class="py-3 px-4">${inv.cust}</td>
+            <td class="py-3 px-4 font-bold">RM ${inv.amt.toLocaleString()}</td>
+            <td class="py-3 px-4">${inv.paid ? '<span class="px-2 py-1 bg-emerald-100 text-emerald-800 rounded-full font-bold">Paid • Matched</span>' : '<span class="px-2 py-1 bg-amber-100 text-amber-800 rounded-full font-bold">Active Link</span>'}</td>
+            <td class="py-3 px-5 text-right">
+              ${inv.paid ? '<span class="text-sky-600 font-semibold">Synced to Xero ✓</span>' : '<button onclick="openBuyerPortal(\''+inv.id+'\')" class="px-3 py-1 bg-slate-900 text-white rounded-lg font-semibold">Open Pay Link →</button>'}
+            </td>
+          </tr>
+        `;
+      });
 
-        <!-- Live Activity & Auto-Reconciliation Feed -->
-        <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-5">
-            <div class="flex items-center justify-between mb-3">
-                <h3 class="font-bold text-slate-900 text-sm">Live Auto-Reconciliation & Audit Log</h3>
-                <span class="text-xs text-slate-400">Real-time webhook stream</span>
-            </div>
-            <div id="activity-log" class="space-y-2.5 text-xs">
-                <!-- Logs injected by JS -->
-            </div>
-        </div>
-    </main>
+      const xeroList = document.getElementById("xero-list");
+      xeroList.innerHTML = "";
+      invoices.filter(i => i.paid).forEach(i => {
+        xeroList.innerHTML += `<div class="flex justify-between py-2 border-b border-slate-50"><span><b>${i.id}</b> (${i.cust})</span> <span class="font-mono text-slate-500">Ref: #${i.ref}</span> <span class="text-emerald-600 font-bold">✓ Reconciled</span></div>`;
+      });
+    }
 
-    <!-- MODAL 1: Create & Send Invoice -->
-    <div id="create-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs hidden items-center justify-center p-4 z-50">
-        <div class="bg-white rounded-2xl max-w-md w-full shadow-2xl border border-slate-200 overflow-hidden fade-in">
-            <div class="px-6 py-4 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
-                <h3 class="font-bold text-slate-900">Create & Send Smart Invoice</h3>
-                <button onclick="closeCreateModal()" class="text-slate-400 hover:text-slate-600 font-bold text-lg">&times;</button>
-            </div>
-            <form onsubmit="handleCreateInvoice(event)" class="p-6 space-y-4">
-                <div>
-                    <label class="block text-xs font-semibold text-slate-700 mb-1">Customer Company Name</label>
-                    <input type="text" id="input-customer" value="Penang Precision Engineering Sdn Bhd" required
-                        class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none">
-                </div>
-                <div class="grid grid-cols-2 gap-3">
-                    <div>
-                        <label class="block text-xs font-semibold text-slate-700 mb-1">Amount (RM)</label>
-                        <input type="number" id="input-amount" value="12500" min="100" step="50" required
-                            class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-semibold text-slate-700 mb-1">Due Terms</label>
-                        <select id="input-terms" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm bg-white outline-none">
-                            <option>Due on Receipt</option>
-                            <option selected>Net 14 Days</option>
-                            <option>Net 30 Days</option>
-                        </select>
-                    </div>
-                </div>
-                <div class="bg-indigo-50 border border-indigo-100 rounded-lg p-3 text-xs text-indigo-900 space-y-1">
-                    <div class="font-semibold">Included Automatically:</div>
-                    <div>✓ LHDN MyInvois QR & UUID Validation</div>
-                    <div>✓ One-click DuitNow QR, FPX & Corporate Card Pay Link</div>
-                    <div>✓ Automated WhatsApp & Email Payment Reminders</div>
-                </div>
-                <div class="pt-2 flex items-center justify-end gap-2">
-                    <button type="button" onclick="closeCreateModal()" class="px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 rounded-lg">Cancel</button>
-                    <button type="submit" class="px-4 py-2 text-sm font-semibold bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg shadow-sm">
-                        Send Smart Invoice →
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
+    function switchTab(tab) {
+      ["seller", "buyer", "xero"].forEach(t => {
+        document.getElementById(`view-${t}`).classList.add("hidden");
+        document.getElementById(`tab-${t}`).className = "px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-300 hover:text-white transition";
+      });
+      document.getElementById(`view-${tab}`).classList.remove("hidden");
+      document.getElementById(`tab-${tab}`).className = "px-3 py-1.5 rounded-lg text-xs font-semibold bg-indigo-600 text-white transition";
+    }
 
-    <!-- MODAL 2: Buyer Payment Portal Simulation -->
-    <div id="pay-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs hidden items-center justify-center p-4 z-50">
-        <div class="bg-white rounded-2xl max-w-md w-full shadow-2xl border border-slate-200 overflow-hidden fade-in">
-            <div class="px-6 py-4 bg-indigo-950 text-white flex items-center justify-between">
-                <div>
-                    <span class="text-[10px] uppercase tracking-wider bg-indigo-700 px-2 py-0.5 rounded font-bold">Buyer View — Payment Link</span>
-                    <h3 class="font-bold text-base mt-1" id="pay-modal-inv">INV-2026-089</h3>
-                </div>
-                <button onclick="closePayModal()" class="text-indigo-300 hover:text-white font-bold text-lg">&times;</button>
-            </div>
+    function openBuyerPortal(id) {
+      switchTab('buyer');
+    }
 
-            <div class="p-6 space-y-4">
-                <div class="bg-slate-50 border border-slate-200 rounded-xl p-4 flex items-center justify-between">
-                    <div>
-                        <div class="text-xs text-slate-500">Billed To</div>
-                        <div class="font-bold text-slate-900 text-sm" id="pay-modal-customer">Customer Name</div>
-                        <div class="text-[11px] text-emerald-700 font-medium mt-0.5">✓ LHDN e-Invoice Validated</div>
-                    </div>
-                    <div class="text-right">
-                        <div class="text-xs text-slate-500">Total Due</div>
-                        <div class="text-xl font-extrabold text-indigo-600" id="pay-modal-amount">RM 0.00</div>
-                    </div>
-                </div>
+    function selectRail(el) {
+      document.querySelectorAll('.rail-btn').forEach(b => { b.className = "rail-btn p-3 rounded-xl border border-slate-200 cursor-pointer"; });
+      el.className = "rail-btn p-3 rounded-xl border-2 border-indigo-600 bg-indigo-50 cursor-pointer";
+    }
 
-                <div>
-                    <label class="block text-xs font-semibold text-slate-700 mb-2">Select Instant Payment Method</label>
-                    <div class="grid grid-cols-3 gap-2">
-                        <button type="button" onclick="selectRail(this, 'DuitNow Instant Transfer')" class="rail-btn border-2 border-indigo-600 bg-indigo-50 text-indigo-900 rounded-lg p-2.5 text-center text-xs font-bold">
-                            DuitNow
-                        </button>
-                        <button type="button" onclick="selectRail(this, 'FPX B2B Online Banking')" class="rail-btn border border-slate-200 hover:border-slate-300 text-slate-700 rounded-lg p-2.5 text-center text-xs font-semibold">
-                            FPX B2B
-                        </button>
-                        <button type="button" onclick="selectRail(this, 'Corporate Card')" class="rail-btn border border-slate-200 hover:border-slate-300 text-slate-700 rounded-lg p-2.5 text-center text-xs font-semibold">
-                            Card
-                        </button>
-                    </div>
-                </div>
+    function payInvoice() {
+      invoices[2].paid = true;
+      invoices[2].ref = "DN992814";
+      document.getElementById("pay-btn").classList.add("hidden");
+      document.getElementById("success-banner").classList.remove("hidden");
+      render();
+    }
 
-                <div id="pay-processing" class="hidden bg-emerald-50 border border-emerald-200 rounded-lg p-3 text-center">
-                    <div class="text-xs font-bold text-emerald-800">Processing payment & matching invoice reference...</div>
-                    <div class="text-[11px] text-emerald-600 mt-0.5">Syncing reconciled ledger entry to Xero</div>
-                </div>
-
-                <button id="confirm-pay-btn" onclick="executeBuyerPayment()" class="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm rounded-xl shadow-md transition">
-                    Pay Now & Trigger Auto-Match
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <script>
-        let selectedRail = 'DuitNow Instant Transfer';
-        let activeInvoiceId = null;
-
-        const initialInvoices = [
-            {
-                id: 'INV-2026-089',
-                lhdn: 'MY-LHDN-994821',
-                customer: 'Johor Logistics & Cold Chain Sdn Bhd',
-                amount: 18450.00,
-                status: 'Sent',
-                xero: 'Awaiting Payment',
-                paidVia: null
-            },
-            {
-                id: 'INV-2026-088',
-                lhdn: 'MY-LHDN-994790',
-                customer: 'Selangor Packaging Solutions Bhd',
-                amount: 26300.00,
-                status: 'Paid & Matched',
-                xero: 'Reconciled in Xero',
-                paidVia: 'FPX B2B'
-            },
-            {
-                id: 'INV-2026-087',
-                lhdn: 'MY-LHDN-994744',
-                customer: 'Kuala Lumpur Retail Distributors',
-                amount: 16500.00,
-                status: 'Paid & Matched',
-                xero: 'Reconciled in Xero',
-                paidVia: 'DuitNow'
-            }
-        ];
-
-        let invoices = JSON.parse(JSON.stringify(initialInvoices));
-
-        function formatMYR(num) {
-            return 'RM ' + Number(num).toLocaleString('en-MY', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-        }
-
-        function addLog(message, badgeText, badgeColor) {
-            const logContainer = document.getElementById('activity-log');
-            const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-            const item = document.createElement('div');
-            item.className = 'flex items-center justify-between p-2.5 rounded-lg bg-slate-50 border border-slate-100 fade-in';
-            item.innerHTML = `
-                <div class="flex items-center gap-2.5">
-                    <span class="px-2 py-0.5 rounded font-bold text-[10px] ${badgeColor}">${badgeText}</span>
-                    <span class="text-slate-700 font-medium">${message}</span>
-                </div>
-                <span class="text-slate-400 text-[11px] shrink-0">${time}</span>
-            `;
-            logContainer.prepend(item);
-        }
-
-        function updateStepBadges(step) {
-            const configs = [
-                { id: 'step-badge-1', active: step >= 1 },
-                { id: 'step-badge-2', active: step >= 2 },
-                { id: 'step-badge-3', active: step >= 3 }
-            ];
-            configs.forEach((c, idx) => {
-                const el = document.getElementById(c.id);
-                const numSpan = el.querySelector('span');
-                if (c.active) {
-                    el.className = 'flex items-center gap-1.5 px-2.5 py-1.5 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200';
-                    numSpan.className = 'w-4 h-4 rounded-full bg-indigo-600 text-white flex items-center justify-center text-[10px]';
-                } else {
-                    el.className = 'flex items-center gap-1.5 px-2.5 py-1.5 rounded-full bg-slate-100 text-slate-500 border border-slate-200';
-                    numSpan.className = 'w-4 h-4 rounded-full bg-slate-400 text-white flex items-center justify-center text-[10px]';
-                }
-            });
-        }
-
-        function renderDashboard() {
-            const tbody = document.getElementById('invoice-table-body');
-            tbody.innerHTML = '';
-
-            let outstandingTotal = 0;
-            let outstandingCount = 0;
-            let collectedTotal = 0;
-
-            invoices.forEach(inv => {
-                if (inv.status === 'Sent') {
-                    outstandingTotal += inv.amount;
-                    outstandingCount++;
-                } else {
-                    collectedTotal += inv.amount;
-                }
-
-                const isPaid = inv.status === 'Paid & Matched';
-                const tr = document.createElement('tr');
-                tr.className = 'hover:bg-slate-50/80 transition';
-                tr.innerHTML = `
-                    <td class="py-3.5 px-5">
-                        <div class="font-bold text-slate-900">${inv.id}</div>
-                        <div class="text-[11px] text-slate-400">${inv.lhdn}</div>
-                    </td>
-                    <td class="py-3.5 px-4 font-medium text-slate-800">${inv.customer}</td>
-                    <td class="py-3.5 px-4 font-bold text-slate-900">${formatMYR(inv.amount)}</td>
-                    <td class="py-3.5 px-4">
-                        ${isPaid
-                            ? `<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800">✓ Paid • Auto-Matched</span>`
-                            : `<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-800">● Sent • Pay Link Active</span>`
-                        }
-                    </td>
-                    <td class="py-3.5 px-4">
-                        ${isPaid
-                            ? `<span class="text-xs font-semibold text-emerald-700">✓ Synced (${inv.paidVia})</span>`
-                            : `<span class="text-xs text-slate-400">Pending settlement</span>`
-                        }
-                    </td>
-                    <td class="py-3.5 px-5 text-right">
-                        ${isPaid
-                            ? `<span class="text-xs font-medium text-slate-400">Zero manual work</span>`
-                            : `<button onclick="openPayModal('${inv.id}')" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold px-3 py-1.5 rounded-lg shadow-xs transition">
-                                Simulate Buyer Pay →
-                               </button>`
-                        }
-                    </td>
-                `;
-                tbody.appendChild(tr);
-            });
-
-            document.getElementById('kpi-outstanding').textContent = formatMYR(outstandingTotal);
-            document.getElementById('kpi-outstanding-sub').textContent = `${outstandingCount} invoice${outstandingCount === 1 ? '' : 's'} awaiting payment`;
-            document.getElementById('kpi-collected').textContent = formatMYR(collectedTotal);
-        }
-
-        function openCreateModal() {
-            document.getElementById('create-modal').classList.remove('hidden');
-            document.getElementById('create-modal').classList.add('flex');
-        }
-
-        function closeCreateModal() {
-            document.getElementById('create-modal').classList.add('hidden');
-            document.getElementById('create-modal').classList.remove('flex');
-        }
-
-        function handleCreateInvoice(e) {
-            e.preventDefault();
-            const customer = document.getElementById('input-customer').value.trim();
-            const amount = parseFloat(document.getElementById('input-amount').value);
-            const nextNum = 90 + invoices.length - 3;
-            const newId = `INV-2026-0${nextNum}`;
-            const lhdnCode = `MY-LHDN-${Math.floor(100000 + Math.random() * 900000)}`;
-
-            invoices.unshift({
-                id: newId,
-                lhdn: lhdnCode,
-                customer: customer,
-                amount: amount,
-                status: 'Sent',
-                xero: 'Awaiting Payment',
-                paidVia: null
-            });
-
-            closeCreateModal();
-            renderDashboard();
-            updateStepBadges(2);
-
-            document.getElementById('guide-step-title').textContent = 'Step 2 of 3 — Buyer Receives Smart Payment Link';
-            document.getElementById('guide-step-desc').innerHTML = `Invoice <strong>${newId}</strong> sent with LHDN validation! Now click <strong>"Simulate Buyer Pay →"</strong> on that row to experience instant DuitNow/FPX checkout.`;
-
-            addLog(`Issued ${newId} (${formatMYR(amount)}) to ${customer} with embedded DuitNow/FPX link.`, 'INVOICE SENT', 'bg-indigo-100 text-indigo-800');
-        }
-
-        function openPayModal(id) {
-            const inv = invoices.find(i => i.id === id);
-            if (!inv) return;
-            activeInvoiceId = id;
-            document.getElementById('pay-modal-inv').textContent = `${inv.id} • ${inv.lhdn}`;
-            document.getElementById('pay-modal-customer').textContent = inv.customer;
-            document.getElementById('pay-modal-amount').textContent = formatMYR(inv.amount);
-            document.getElementById('pay-processing').classList.add('hidden');
-            document.getElementById('confirm-pay-btn').disabled = false;
-            document.getElementById('confirm-pay-btn').textContent = 'Pay Now & Trigger Auto-Match';
-
-            document.getElementById('pay-modal').classList.remove('hidden');
-            document.getElementById('pay-modal').classList.add('flex');
-        }
-
-        function closePayModal() {
-            document.getElementById('pay-modal').classList.add('hidden');
-            document.getElementById('pay-modal').classList.remove('flex');
-        }
-
-        function selectRail(btn, railName) {
-            selectedRail = railName;
-            document.querySelectorAll('.rail-btn').forEach(b => {
-                b.className = 'rail-btn border border-slate-200 hover:border-slate-300 text-slate-700 rounded-lg p-2.5 text-center text-xs font-semibold';
-            });
-            btn.className = 'rail-btn border-2 border-indigo-600 bg-indigo-50 text-indigo-900 rounded-lg p-2.5 text-center text-xs font-bold';
-        }
-
-        function executeBuyerPayment() {
-            const inv = invoices.find(i => i.id === activeInvoiceId);
-            if (!inv) return;
-
-            document.getElementById('confirm-pay-btn').disabled = true;
-            document.getElementById('confirm-pay-btn').textContent = 'Matching Payment...';
-            document.getElementById('pay-processing').classList.remove('hidden');
-
-            setTimeout(() => {
-                inv.status = 'Paid & Matched';
-                inv.xero = 'Reconciled in Xero';
-                inv.paidVia = selectedRail.split(' ')[0];
-
-                closePayModal();
-                renderDashboard();
-                updateStepBadges(3);
-
-                document.getElementById('guide-step-title').textContent = 'Step 3 of 3 — Auto-Matched & Reconciled in Xero!';
-                document.getElementById('guide-step-desc').innerHTML = `<strong>${inv.id}</strong> (${formatMYR(inv.amount)}) was paid via ${inv.paidVia}, matched automatically to the invoice, and synced to Xero—saving YYC bookkeepers manual reconciliation.`;
-
-                addLog(`Payment of ${formatMYR(inv.amount)} received via ${inv.paidVia} → Auto-matched to ${inv.id} & reconciled in Xero.`, 'AUTO-MATCHED', 'bg-emerald-100 text-emerald-800');
-            }, 700);
-        }
-
-        function resetDemo() {
-            invoices = JSON.parse(JSON.stringify(initialInvoices));
-            document.getElementById('activity-log').innerHTML = '';
-            updateStepBadges(1);
-            document.getElementById('guide-step-title').textContent = 'Step 1 of 3 — Issue Smart Invoice';
-            document.getElementById('guide-step-desc').innerHTML = 'Click <strong>"+ Create & Send Invoice"</strong> (or click <strong>"Simulate Buyer Pay"</strong> on any sent invoice) to see how Volopay embeds DuitNow/FPX links and eliminates manual chasing.';
-            renderDashboard();
-            addLog('Connected to Xero Organization: Klang Valley Manufacturing Sdn Bhd (LHDN MyInvois Ready).', 'SYSTEM READY', 'bg-slate-200 text-slate-700');
-        }
-
-        // Initialize
-        resetDemo();
-    </script>
+    render();
+  </script>
 </body>
 </html>
